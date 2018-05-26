@@ -11,9 +11,9 @@ def generateRotations(uniformRotation, rotationAxis, numQuaternions):
 
     if uniformRotation is None:
         # No rotation desired, init quaternions as (1,0,0,0)
-        Quaternions =  np.empty((numQuaternions, 4))
-        Quaternions[:,0] = 1.
-        Quaternions[:,1:] = 0.
+        Quaternions = np.empty((numQuaternions, 4))
+        Quaternions[:, 0] = 1.
+        Quaternions[:, 1:] = 0.
 
         return Quaternions
 
@@ -29,6 +29,7 @@ def generateRotations(uniformRotation, rotationAxis, numQuaternions):
         for i in range(numQuaternions):
             Quaternions[i, :] = getRandomRotation(rotationAxis)
         return Quaternions
+
 
 def setEnergyFromFile(fname, beam):
     """
@@ -56,7 +57,7 @@ def setFluenceFromFile(fname, timeSlice, sliceInterval, beam):
     n_phot = 0
     for i in range(sliceInterval):
         with h5py.File(fname, 'r') as f:
-            datasetname = '/data/snp_' + '{0:07}'.format(timeSlice-i) + '/Nph'
+            datasetname = '/data/snp_' + '{0:07}'.format(timeSlice - i) + '/Nph'
             n_phot += f.get(datasetname).value
     beam.set_photonsPerPulse(n_phot)
 

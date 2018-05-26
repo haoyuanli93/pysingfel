@@ -77,7 +77,7 @@ class Beam(object):
         Set the wavelength to x.
         The unit of x is meter.
         """
-        
+
         self.Lambda = x
         self.update()
 
@@ -89,7 +89,7 @@ class Beam(object):
         Set the photon_energy to eV.
         The unit of photon_energy is eV.
         """
-        
+
         self.photon_energy = ev
         self.update()
 
@@ -98,9 +98,9 @@ class Beam(object):
 
     def get_wavenumber(self):
         return self.k
-    
+
     def get_wavevector(self):
-        return np.array([0,0,self.get_wavenumber()])
+        return np.array([0, 0, self.get_wavenumber()])
 
     def set_focus(self, x, y=None, shape='circle'):
         """
