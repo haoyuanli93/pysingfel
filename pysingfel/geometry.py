@@ -260,45 +260,52 @@ def take_n_slice(pattern_shape, pixel_momentum,
     return slices_holder
 
 
-def take_n_random_slices(detector, volume, voxel_length, number):
+def take_n_random_slices(pattern_shape, pixel_momentum,
+                         volume, voxel_length, number, inverse=False):
     """
     Take n slices from n random orientations.
 
-    :param detector: The detector object
+    :param pattern_shape: The shape of the pattern.
+    :param pixel_momentum: The coordinate of each pixel in the reciprocal space measured in A
     :param volume: The volume to slice from
     :param voxel_length: The voxel length of this volume
     :param number: The number of patterns to slice from.
+    :param inverse: Whether to use the inverse of the rotation or not.
+
     :return: [number, panel number, panel pixel number x, panel pixel number y]
     """
     # Preprocess
-    pattern_shape_ = detector.pixel_rms.shape
-    pixel_position_ = detector.pixel_position_reciprocal.copy()
+    slice_num = number
+    pixel_num = np.prod(pattern_shape)
 
     # Create variable to hold the slices
-    slices = np.zeros((number, pattern_shape_[0], pattern_shape_[1], pattern_shape_[2]))
+    slices_holder = np.zeros((slice_num,) + tuple(pattern_shape))
 
     tic = time.time()
-    for l in range(number):
+    for l in range(slice_num):
         # construct the rotation matrix
-        rotmat = get_random_rotation(rotation_axis='random')
+        rot_mat = get_random_rotation(rotation_axis='random')
+        if inverse:
+            rot_mat = np.linalg.inv(rot_mat)
+
         # rotate the pixels in the reciprocal space.
         # Notice that at this time, the pixel position is in 3D
-        pixel_position_new = rotate_pixels_in_reciprocal_space(rotmat, pixel_position_)
+        rotated_pixel_position = rotate_pixels_in_reciprocal_space(rot_mat, pixel_momentum)
         # calculate the index and weight in 3D
-        index, weight_tmp = get_weight_in_reciprocal_space(pixel_position=pixel_position_new,
-                                                           voxel_length=voxel_length,
-                                                           voxel_num_1d=volume.shape[0])
+        index, weight = get_weight_and_index(pixel_position=rotated_pixel_position,
+                                             voxel_length=voxel_length,
+                                             voxel_num_1d=volume.shape[0])
         # get one slice
-        slices[l, :, :, :] = take_one_slice(local_index=index,
-                                            local_weight=weight_tmp,
-                                            volume=volume,
-                                            pixel_num=detector.pixel_num_total,
-                                            pattern_shape=detector.pedestal.shape)
+        slices_holder[l] = take_one_slice(local_index=index,
+                                          local_weight=weight,
+                                          volume=volume,
+                                          pixel_num=pixel_num,
+                                          pattern_shape=pattern_shape)
 
     toc = time.time()
-    print("Finishing constructing %d patterns in %f seconds" % (number, toc - tic))
+    print("Finishing constructing %d patterns in %f seconds" % (slice_num, toc - tic))
 
-    return slices
+    return slices_holder
 
 
 ######################################################################
